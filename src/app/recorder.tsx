@@ -14,9 +14,9 @@ export default function RecorderScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    // backgroundColor: "#0B1628",
-    // alignItems: "center",
+    flex: 1,
+    backgroundColor: "#0B1628",
+    alignItems: "center",
     justifyContent: "center",
     padding: 24,
   },
