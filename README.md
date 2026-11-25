@@ -61,3 +61,4 @@ Join our community of developers creating universal apps.
 npx expo install expo-audio expo-file-system
 
 npm install @react-native-async-storage/async-storage
+npx expo install @expo/vector-icons
