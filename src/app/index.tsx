@@ -9,11 +9,17 @@ import {
 import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  createAudioPlayer,
+  AudioPlayer,
+} from "expo-audio";
 import { VoiceNote } from "../types/voiceNote";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [player, setPlayer] = useState<AudioPlayer | null>(null);
 
   const loadVoiceNotes = async () => {
     try {
@@ -51,7 +57,32 @@ export default function HomeScreen() {
     return new Date(date).toLocaleDateString();
   };
 
+  const playVoiceNote = async (note: VoiceNote) => {
+    try {
+      if (playingId === note.id) {
+        player?.pause();
+        setPlayingId(null);
+        return;
+      }
+
+      if (player) {
+        player.pause();
+      }
+
+      const newPlayer = createAudioPlayer(note.uri);
+
+      newPlayer.play();
+
+      setPlayer(newPlayer);
+      setPlayingId(note.id);
+    } catch (error) {
+      console.log("Error playing voice note:", error);
+    }
+  };
+
   const renderVoiceNote = ({ item }: { item: VoiceNote }) => {
+    const isPlaying = playingId === item.id;
+
     return (
       <View style={styles.noteCard}>
         <View style={styles.noteIcon}>
@@ -73,9 +104,12 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        <Pressable style={styles.playButton}>
+        <Pressable
+          style={styles.playButton}
+          onPress={() => playVoiceNote(item)}
+        >
           <Ionicons
-            name="play"
+            name={isPlaying ? "pause" : "play"}
             size={20}
             color="#FFFFFF"
           />
