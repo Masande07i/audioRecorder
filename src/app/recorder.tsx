@@ -8,12 +8,14 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   AudioModule,
   RecordingPresets,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import { VoiceNote } from "../types/voiceNote";
 
 export default function RecorderScreen() {
   const router = useRouter();
@@ -61,16 +63,50 @@ export default function RecorderScreen() {
 
     setIsRecording(false);
 
-    console.log("Recording URI:", recorder.uri);
-    console.log(
-      "Recording duration:",
-      recorderState.durationMillis
-    );
+    const duration = recorderState.durationMillis;
+    const uri = recorder.uri;
 
-    Alert.alert(
-      "Recording Saved",
-      `Duration: ${formatTime(recorderState.durationMillis)}`
-    );
+    if (!uri) {
+      Alert.alert("Error", "The recording could not be saved.");
+      return;
+    }
+
+    const voiceNote: VoiceNote = {
+      id: Date.now().toString(),
+      name: `Voice Note ${new Date().toLocaleDateString()}`,
+      uri: uri,
+      duration: duration,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const existingNotes = await AsyncStorage.getItem("voiceNotes");
+
+      const voiceNotes: VoiceNote[] = existingNotes
+        ? JSON.parse(existingNotes)
+        : [];
+
+      voiceNotes.push(voiceNote);
+
+      await AsyncStorage.setItem(
+        "voiceNotes",
+        JSON.stringify(voiceNotes)
+      );
+
+      Alert.alert(
+        "Recording Saved",
+        `Duration: ${formatTime(duration)}`
+      );
+
+      router.back();
+    } catch (error) {
+      console.log("Error saving voice note:", error);
+
+      Alert.alert(
+        "Error",
+        "The recording could not be saved."
+      );
+    }
   };
 
   return (
